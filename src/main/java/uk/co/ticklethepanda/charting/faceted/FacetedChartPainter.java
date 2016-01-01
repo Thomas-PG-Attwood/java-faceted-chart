@@ -5,73 +5,64 @@ import java.awt.Graphics2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
-import java.util.ArrayList;
 import java.util.List;
+
+import uk.co.ticklethepanda.charting.faceted.internal.Axis;
+import uk.co.ticklethepanda.charting.faceted.internal.CoordinateConverter;
+import uk.co.ticklethepanda.charting.faceted.internal.PointConverter;
+
 import java.time.LocalDate;
 import java.time.LocalTime;
 
 public class FacetedChartPainter<G, X, Y> {
-
-  public static final <G, X extends Number, Y extends Number> FacetedChartPainter<G, X, Y> createNumberAgainstNumberPlot(
-      FacetedChartData<?, X, Y, G> data) {
-    
-    return new FacetedChartPainter<G, X, Y>(data,
-        new Plotter.NumberPlotter(),
-        new Plotter.NumberPlotter());
-  }
   
-  public static final <G, Y extends Number> FacetedChartPainter<G, LocalDate, Y> createNumberAgainstLocalDatePlot(
-      FacetedChartData<?, LocalDate, Y, G> data) {
+  public class Facade {
     
-    return new FacetedChartPainter<G, LocalDate, Y>(data,
-        new Plotter.LocalDatePlotter(),
-        new Plotter.NumberPlotter());
-  }
-  
-  public static final <G, Y extends Number> FacetedChartPainter<G, LocalTime, Y> createNumberAgainstLocalTimePlot(
-      FacetedChartData<?, LocalTime, Y, G> data) {
-    
-    return new FacetedChartPainter<G, LocalTime, Y>(data,
-        new Plotter.LocalTimePlotter(),
-        new Plotter.NumberPlotter());
-  }
+    private int currentFacadeNumber;
 
-  private static final int IMAGE_SIZE = 1000;
-
-  public interface Axis {
-
-    enum AxisType {
-      X_AXIS, Y_AXIS
+    public Facade(int facadeIndex) {
+      this.currentFacadeNumber = facadeIndex;
     }
 
-    AxisType getType();
-
-    public class X implements Axis {
-
-      @Override
-      public AxisType getType() {
-        return AxisType.X_AXIS;
-      }
-
-      public int getHeight() {
-        return 40;
-      }
-
+    private Color getColor() {
+      return Color.getHSBColor(
+          1.0f / (float) data.getGroups().size() * (float) currentFacadeNumber,
+          0.8f,
+          0.5f);
     }
 
-    public class Y implements Axis {
-
-      @Override
-      public AxisType getType() {
-        return AxisType.Y_AXIS;
-      }
-
-      public int getWidth() {
-        return 40;
-      }
-
+    private Rectangle2D getDrawArea() {
+      return new Rectangle2D.Double(
+          getFacadeX(),
+          getFacadeY(),
+          getFacadeWidth(),
+          getFacadeHeight());
     }
 
+    private double getFacadeHeight() {
+      return (image.getHeight()
+          - TOP_MARGIN - BOTTOM_MARGIN
+          - MARGIN_BETWEEN_FACADES * (double) (data.getGroups().size() - 1)
+          - (double) xAxis.getHeight())
+          / (double) data.getGroups().size();
+    }
+
+    private double getFacadeWidth() {
+      return image.getWidth()
+          - LEFT_MARGIN
+          - RIGHT_MARGIN
+          - yAxis.getWidth();
+    }
+
+    private double getFacadeX() {
+      return LEFT_MARGIN + yAxis.getWidth();
+    }
+
+    private double getFacadeY() {
+      return TOP_MARGIN
+          + MARGIN_BETWEEN_FACADES * currentFacadeNumber
+          + getFacadeHeight() * currentFacadeNumber;
+    }
   }
 
   /**
@@ -98,8 +89,11 @@ public class FacetedChartPainter<G, X, Y> {
       double scaleY = drawArea.getHeight();
 
       for (Point2D point : points) {
-        double xNorm = (point.getX() - xMin) / (xMax - xMin);
-        double yNorm = (point.getY() - yMin) / (yMax - yMin);
+        double xNorm = (point.getX() - dataBounds.getMinX())
+            / (dataBounds.getMaxX() - dataBounds.getMinX());
+        
+        double yNorm = (point.getY() - dataBounds.getMinY())
+            / (dataBounds.getMaxY() - dataBounds.getMinY());
 
         double x = startX + xNorm * scaleX - MARKER_SIZE / 2.0;
         double y = startY + yNorm * scaleY - MARKER_SIZE / 2.0;
@@ -110,15 +104,52 @@ public class FacetedChartPainter<G, X, Y> {
     }
   }
 
-  public static final double LEFT_MARGIN = 10;
-  public static final double RIGHT_MARGIN = 10;
+  private static final int IMAGE_SIZE = 1000;
 
-  public static final double TOP_MARGIN = 10;
-  public static final double BOTTOM_MARGIN = 10;
+  private static final double FACADE_PERCENTAGE_MARGIN = 0.1;
+  
+  private static final double LEFT_MARGIN = 10;
 
-  public static final double MARGIN_BETWEEN_FACADES = 10;
+  private static final double RIGHT_MARGIN = 10;
 
-  public static final double MARKER_SIZE = 4;
+  private static final double TOP_MARGIN = 10;
+
+  private static final double BOTTOM_MARGIN = 10;
+  
+  private static final double MARGIN_BETWEEN_FACADES = 10;
+
+  private static final double MARKER_SIZE = 2;
+  
+  public static final <G, Y extends Number> FacetedChartPainter<G, LocalDate, Y> createNumberAgainstLocalDatePlot(
+      FacetedChartData<?, LocalDate, Y, G> data) {
+
+    PointConverter<LocalDate, Y> converter = new PointConverter<LocalDate, Y>(
+        new CoordinateConverter.LocalDatePlotter(),
+        new CoordinateConverter.NumberPlotter());
+
+    return new FacetedChartPainter<G, LocalDate, Y>(data, converter);
+  }
+
+  public static final <G, Y extends Number> FacetedChartPainter<G, LocalTime, Y> createNumberAgainstLocalTimePlot(
+      FacetedChartData<?, LocalTime, Y, G> data) {
+
+    PointConverter<LocalTime, Y> converter = new PointConverter<LocalTime, Y>(
+        new CoordinateConverter.LocalTimePlotter(),
+        new CoordinateConverter.NumberPlotter());
+
+    return new FacetedChartPainter<G, LocalTime, Y>(data, converter);
+  }
+
+  public static final <G, X extends Number, Y extends Number> FacetedChartPainter<G, X, Y> createNumberAgainstNumberPlot(
+      FacetedChartData<?, X, Y, G> data) {
+
+    PointConverter<X, Y> converter = new PointConverter<X, Y>(
+        new CoordinateConverter.NumberPlotter(),
+        new CoordinateConverter.NumberPlotter());
+
+    return new FacetedChartPainter<G, X, Y>(data,
+        converter);
+  }
 
   private BufferedImage image;
   private Graphics2D graphics;
@@ -128,69 +159,68 @@ public class FacetedChartPainter<G, X, Y> {
 
   private FacetedChartData<?, X, Y, G> data;
 
-  private double xMin;
-  private double xMax;
+  private Rectangle2D dataBounds;
 
-  private double yMin;
-  private double yMax;
-
-  private Plotter<? super X> xConverter;
-  private Plotter<? super Y> yConverter;
+  private PointConverter<X, Y> pointConverter;
 
   public FacetedChartPainter(FacetedChartData<?, X, Y, G> data,
-      Plotter<? super X> xConverter,
-      Plotter<? super Y> yConverter) {
+      PointConverter<X, Y> pointConverter) {
     this.data = data;
+    this.pointConverter = pointConverter;
 
-    this.xConverter = xConverter;
-    this.yConverter = yConverter;
-
-    calculateXRange();
-    calculateYRange();
+    this.dataBounds = getDataBounds();
   }
-
-  private void calculateYRange() {
-    yMin = yConverter.getDouble(data.getMinY());
-    yMax = yConverter.getDouble(data.getMaxY());
-
-    double range = yMax - yMin;
-
-    yMin -= range / 10.0;
-    yMax += range / 10.0;
-  }
-
-  private void calculateXRange() {
-    xMin = xConverter.getDouble(data.getMinX());
-    xMax = xConverter.getDouble(data.getMaxX());
-
-    double range = xMax - xMin;
-
-    xMin -= range / 10.0;
-    xMax += range / 10.0;
-  }
-
+  
   public BufferedImage draw() {
     initialiseImage();
     initialiseGraphics();
 
-    int facadeNumber = 0;
+    drawFacades();
 
+    return image;
+  }
+
+  private void drawFacades() {
+
+    int facadeIndex = 0;
+    
     for (G group : data.getGroups()) {
-
-      graphics.setColor(getColorForFacade(facadeNumber));
-
-      Rectangle2D drawArea = getDrawAreaForFacade(facadeNumber);
-
-      List<Point2D> points = convertDataToPoints(group);
+      
+      Facade facadeCalculator = new Facade(facadeIndex);
+      
+      graphics.setColor(facadeCalculator.getColor());
 
       new InnerChartPainter(
-          points,
-          drawArea)
+          pointConverter.convertDataGroup(data, group),
+          facadeCalculator.getDrawArea())
               .paint();
 
-      facadeNumber++;
+      facadeIndex++;
     }
-    return image;
+  }
+
+  private Rectangle2D getDataBounds() {
+    
+    double xMin = pointConverter.convertX(data.getMinX());
+    double xMax = pointConverter.convertX(data.getMaxX());
+    
+    double yMin = pointConverter.convertY(data.getMinY());
+    double yMax = pointConverter.convertY(data.getMaxY());
+    
+    double xRange = xMax - xMin;
+    double yRange = yMax - yMin;
+    
+    xMin -= xRange * FACADE_PERCENTAGE_MARGIN;
+    xMax += xRange * FACADE_PERCENTAGE_MARGIN;
+
+    yMin -= yRange * FACADE_PERCENTAGE_MARGIN;
+    yMax += yRange * FACADE_PERCENTAGE_MARGIN;
+    
+    double width = xMax - xMin;
+    
+    double height = yMax - yMin;
+
+    return new Rectangle2D.Double(xMin, yMin, width, height);
   }
 
   private void initialiseGraphics() {
@@ -202,65 +232,6 @@ public class FacetedChartPainter<G, X, Y> {
 
   private void initialiseImage() {
     this.image = new BufferedImage(IMAGE_SIZE, IMAGE_SIZE, BufferedImage.TYPE_INT_RGB);
-  }
-
-  private Rectangle2D getDrawAreaForFacade(int i) {
-    final double facadeWidth = getFacadeWidth();
-    final double facadeHeight = getFacadeHeight();
-
-    double x = getFacadeX();
-    double y = getFacadeY(facadeHeight, i);
-
-    Rectangle2D drawArea = new Rectangle2D.Double(x, y, facadeWidth, facadeHeight);
-    return drawArea;
-  }
-
-  private double getFacadeY(final double facadeHeight, int i) {
-    return TOP_MARGIN
-        + MARGIN_BETWEEN_FACADES * i
-        + facadeHeight * i;
-  }
-
-  private double getFacadeX() {
-    return LEFT_MARGIN + yAxis.getWidth();
-  }
-
-  private Color getColorForFacade(int i) {
-    return Color.getHSBColor(
-        1.0f / (float) data.getGroups().size() * (float) i,
-        0.8f,
-        0.5f);
-  }
-
-  private double getFacadeWidth() {
-    return image.getWidth()
-        - LEFT_MARGIN
-        - RIGHT_MARGIN
-        - yAxis.getWidth();
-  }
-
-  private double getFacadeHeight() {
-    return (image.getHeight()
-        - TOP_MARGIN - BOTTOM_MARGIN
-        - MARGIN_BETWEEN_FACADES * (double) (data.getGroups().size() - 1)
-        - (double) xAxis.getHeight())
-        / (double) data.getGroups().size();
-  }
-
-  private List<Point2D> convertDataToPoints(final G group) {
-    List<Point2D> points = new ArrayList<Point2D>();
-
-    int numPoints = data.size(group);
-
-    List<X> xValues = data.getXValues(group);
-    List<Y> yValues = data.getYValues(group);
-
-    for (int j = 0; j < numPoints; j++) {
-      points.add(new Point2D.Double(
-          xConverter.getDouble(xValues.get(j)),
-          yConverter.getDouble(yValues.get(j))));
-    }
-    return points;
   }
 
 }

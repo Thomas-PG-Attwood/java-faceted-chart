@@ -8,24 +8,44 @@ import java.util.Map;
 import java.util.function.Function;
 
 /**
- * Not thread safe.
+ * Contains the data required for plotting a graph.
+ * 
+ * Not thread safe. Won't act well if T is mutable
  * 
  * @author panda
  *
  * @param <T>
- *          The type of the item plotted by this class.
+ *          The type of the items to be plotted.
  * @param <X>
- *          The type of the values in the x axis.
+ *          The type of the values being plotted on the x axis.
  * @param <Y>
- *          The type of the values in the y axis.
+ *          The type of the values being plotted on the y axis.
  * @param <G>
- *          The type of the grouping.
+ *          The type of the categories.
  */
 public class FacetedChartData<T, X, Y, G> {
 
+  /**
+   * A static factory method for creating a new FacetedChartData where the X
+   * types are comparable and the Y types are comparable. It uses natural
+   * ordering.
+   * 
+   * @param items
+   *          The list of items to plot.
+   * @param xAspect
+   *          The function to get the X values from an item.
+   * @param yAspect
+   *          The function to get the Y values from an item.
+   * @param groupAspect
+   *          The function to get the group from the item.
+   * @return a new FacetedChartData where the X types are comparable and the Y
+   *         types are comparable.
+   */
   public static <T, X extends Comparable<X>, Y extends Comparable<Y>, G> FacetedChartData<T, X, Y, G> withNaturalOrdering(
-      List<T> items, Function<T, X> xAspect,
-      Function<T, Y> yAspect, Function<T, G> groupAspect) {
+      List<T> items,
+      Function<T, X> xAspect,
+      Function<T, Y> yAspect,
+      Function<T, G> groupAspect) {
 
     Comparator<X> xComparator = Comparator.naturalOrder();
     Comparator<Y> yComparator = Comparator.naturalOrder();
@@ -38,12 +58,15 @@ public class FacetedChartData<T, X, Y, G> {
         xComparator,
         yComparator);
   }
-  
 
   public static <T, X extends Comparable<X>, Y extends Comparable<Y>, G> FacetedChartData<T, X, Y, G> withSpecifiedOrdering(
-      List<T> items, Function<T, X> xAspect,
-      Function<T, Y> yAspect, Function<T, G> groupAspect,
-      Comparator<X> xComparator, Comparator<Y> yComparator) {
+      List<T> items,
+      Function<T, X> xAspect,
+      Function<T, Y> yAspect,
+      Function<T, G> groupAspect,
+      Comparator<X> xComparator,
+      Comparator<Y> yComparator) {
+    
     return new FacetedChartData<>(
         items,
         xAspect,
@@ -54,21 +77,21 @@ public class FacetedChartData<T, X, Y, G> {
   }
 
   private List<T> items;
-  
+
   private Function<T, G> groupAspect;
   private Map<G, List<T>> groupMap;
-  
+
   private Function<T, X> xAspect;
   private Function<T, Y> yAspect;
-  
+
   private Comparator<X> xComparator;
   private Comparator<Y> yComparator;
-  
+
   private FacetedChartData(List<T> items, Function<T, X> xAspect,
       Function<T, Y> yAspect, Function<T, G> groupAspect,
       Comparator<X> xComparator, Comparator<Y> yComparator) {
     groupMap = new HashMap<>();
-    
+
     this.items = items;
     this.xAspect = xAspect;
     this.yAspect = yAspect;
@@ -155,7 +178,7 @@ public class FacetedChartData<T, X, Y, G> {
         .min(comparator)
         .get();
   }
-  
+
   private <E> List<E> getValuesForAxis(G group, Function<T, E> aspect) {
     if (groupMap.get(group) == null) {
       return new ArrayList<>();
