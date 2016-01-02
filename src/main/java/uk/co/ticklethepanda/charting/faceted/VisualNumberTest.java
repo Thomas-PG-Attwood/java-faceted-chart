@@ -86,8 +86,8 @@ public class VisualNumberTest {
             Item::getValueY,
             Item::getGroup);
 
-    FacetedChartPainter<Integer, Integer, Integer> painter =
-        FacetedChartPainter.createNumberAgainstNumberPlot(data);
+    FacetedChart<Integer, Integer, Integer> painter =
+        FacetedChart.createNumberAgainstNumberPlot(data);
 
     BufferedImage image = painter.draw();
     image.flush();
@@ -105,7 +105,7 @@ public class VisualNumberTest {
     return new Item(
         random.nextInt(100) - 13,
         random.nextInt(100) + 50,
-        random.nextInt(10));
+        random.nextInt(20));
   }
 
 }

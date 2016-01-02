@@ -88,15 +88,15 @@ public class VisualDateTest {
             Item::getValueX,
             Item::getGroup);
 
-    FacetedChartPainter<Integer, LocalTime, Integer> painter =
-        FacetedChartPainter.createNumberAgainstLocalTimePlot(data);
+    FacetedChart<Integer, LocalTime, Integer> painter =
+        FacetedChart.createNumberAgainstLocalTime(data);
 
     BufferedImage image = painter.draw();
     image.flush();
 
     new File("output").mkdirs();
 
-    File outputFile = new File("output/date-" + VisualDateTest.class.getCanonicalName() + ".png");
+    File outputFile = new File("output/image-" + VisualDateTest.class.getCanonicalName() + ".png");
 
     System.out.println("writing out to file: " + outputFile.getAbsolutePath());
 

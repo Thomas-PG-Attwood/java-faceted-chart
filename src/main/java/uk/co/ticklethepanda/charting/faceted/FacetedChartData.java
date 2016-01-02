@@ -66,7 +66,7 @@ public class FacetedChartData<T, X, Y, G> {
       Function<T, G> groupAspect,
       Comparator<X> xComparator,
       Comparator<Y> yComparator) {
-    
+
     return new FacetedChartData<>(
         items,
         xAspect,
@@ -103,7 +103,7 @@ public class FacetedChartData<T, X, Y, G> {
     createMap();
   }
 
-  public List<T> getGroup(G group) {
+  public List<T> getItems(G group) {
     if (groupMap.get(group) != null) {
       return groupMap.get(group);
     } else {
@@ -154,14 +154,25 @@ public class FacetedChartData<T, X, Y, G> {
   private void createMap() {
     for (T item : items) {
       G group = groupAspect.apply(item);
+      addItemToGroup(item, group);
+    }
 
-      if (groupMap.containsKey(group)) {
-        groupMap.get(group).add(item);
-      } else {
-        List<T> groupedItems = new ArrayList<T>();
-        groupedItems.add(item);
-        groupMap.put(group, groupedItems);
-      }
+    sortItemsByX();
+  }
+
+  private void addItemToGroup(T item, G group) {
+    if (!groupMap.containsKey(group)) {
+      groupMap.put(group, new ArrayList<T>());
+    }
+
+    groupMap.get(group).add(item);
+  }
+
+  private void sortItemsByX() {
+    for (List<T> items : groupMap.values()) {
+      items.sort((a, b) -> xComparator.compare(
+          xAspect.apply(a),
+          xAspect.apply(b)));
     }
   }
 

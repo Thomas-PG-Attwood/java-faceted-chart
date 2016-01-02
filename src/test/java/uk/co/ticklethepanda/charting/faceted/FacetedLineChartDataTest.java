@@ -113,7 +113,7 @@ public class FacetedLineChartDataTest {
 
     Item[] expectedItems = expectedItemsList.toArray(new Item[0]);
 
-    assertThat(chart.getGroup(-1), hasItems(expectedItems));
+    assertThat(chart.getItems(-1), hasItems(expectedItems));
   }
 
   @Test
@@ -128,7 +128,7 @@ public class FacetedLineChartDataTest {
 
     List<Item> expectedItems = new ArrayList<Item>();
 
-    assertEquals(expectedItems, chart.getGroup(-1));
+    assertEquals(expectedItems, chart.getItems(-1));
   }
 
   @Test
