@@ -7,39 +7,66 @@ import java.util.HashMap;
 import java.util.Map;
 
 public interface CoordinateConverter<E> {
-  
-  public static class ObjectPlotter<E> implements CoordinateConverter<E> {
+
+  public static class CategoryConverter<E> implements CoordinateConverter<E> {
     private Map<E, Double> map = new HashMap<E, Double>();
-    
+
     @Override
-    public double getDouble(E value) {
+    public Double getDouble(E value) {
       if (!map.containsKey(value)) {
-        map.put(value, (double) (map.size() + 1));
+        map.put(value, Double.valueOf(map.size() + 1));
       }
       return map.get(value);
     }
-  }
-  
-  public static class NumberPlotter implements CoordinateConverter<Number> {
+
     @Override
-    public double getDouble(Number value) {
+    public E getActual(Double converted) {
+      for (E e : map.keySet()) {
+        if (map.get(e).equals(converted)) {
+          return e;
+        }
+      }
+      return null;
+    }
+  }
+
+  public static class NumberConverter implements CoordinateConverter<Number> {
+    @Override
+    public Double getDouble(Number value) {
       return value.doubleValue();
     }
-  }
-  
-  public static class LocalTimePlotter implements CoordinateConverter<LocalTime> {
+
     @Override
-    public double getDouble(LocalTime value) {
-      return ((LocalTime) value).get(ChronoField.SECOND_OF_DAY);
-    }
-    
-  }
-  public static class LocalDatePlotter implements CoordinateConverter<LocalDate> {
-    @Override
-    public double getDouble(LocalDate value) {
-      return ((LocalDate) value).get(ChronoField.EPOCH_DAY);
+    public Number getActual(Double value) {
+      return value;
     }
   }
-  
-  double getDouble(E value);
+
+  public static class LocalTimeConverter implements CoordinateConverter<LocalTime> {
+    @Override
+    public Double getDouble(LocalTime value) {
+      return Double.valueOf(((LocalTime) value).get(ChronoField.SECOND_OF_DAY));
+    }
+
+    @Override
+    public LocalTime getActual(Double value) {
+      return LocalTime.ofSecondOfDay(value.longValue());
+    }
+  }
+
+  public static class LocalDateConverter implements CoordinateConverter<LocalDate> {
+    @Override
+    public Double getDouble(LocalDate value) {
+      return Double.valueOf(((LocalDate) value).get(ChronoField.EPOCH_DAY));
+    }
+
+    @Override
+    public LocalDate getActual(Double converted) {
+      return LocalDate.ofEpochDay(converted.longValue());
+    }
+  }
+
+  Double getDouble(E value);
+
+  E getActual(Double converted);
 }
