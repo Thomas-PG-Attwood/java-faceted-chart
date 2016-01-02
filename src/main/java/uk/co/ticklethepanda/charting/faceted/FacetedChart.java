@@ -60,33 +60,39 @@ public class FacetedChart<G, X, Y> {
     @Override
     public void draw() {
       for (int i = 0; i < data.getGroups().size(); i++) {
-        StyleManager facadeCalculator = new StyleManager(i);
+        drawAxisForFacade(i);
+      }
+    }
 
-        graphics.setColor(facadeCalculator.getColor());
+    private void drawAxisForFacade(int i) {
+      StyleManager facadeCalculator = new StyleManager(i);
 
-        double x = StyleManager.LEFT_MARGIN;
-        double y = facadeCalculator.getFacadeY();
-        double width = this.getWidth();
-        double height = facadeCalculator.getFacadeHeight();
+      graphics.setColor(facadeCalculator.getColor());
 
-        Rectangle2D drawBounds = new Rectangle2D.Double(x, y, width, height);
+      Rectangle2D drawBounds = facadeCalculator.calculateDrawBoundsForAxis();
 
-        int numberOfTicks = (int) Math.floor(drawBounds.getHeight() / StyleManager.MIN_PIXELS_BETWEEN_TICKS);
+      int numberOfTicks =
+          (int) Math.floor(drawBounds.getHeight()
+              / StyleManager.MIN_PIXELS_BETWEEN_TICKS);
 
-        double pixelsBetweenTicks = drawBounds.getHeight() / (double) numberOfTicks;
+      double pixelsBetweenTicks =
+          drawBounds.getHeight()
+              / (double) numberOfTicks;
 
-        for (int j = 0; j <= numberOfTicks; j++) {
+      drawTicks(drawBounds, numberOfTicks, pixelsBetweenTicks);
+    }
 
-          double xStart = drawBounds.getMaxX() - StyleManager.MAX_TICK_LENGTH;
-          double yStart = drawBounds.getY() + (double) j * pixelsBetweenTicks;
+    private void drawTicks(Rectangle2D drawBounds, int numberOfTicks, double pixelsBetweenTicks) {
+      for (int j = 0; j <= numberOfTicks; j++) {
 
-          double xEnd = drawBounds.getMaxX();
-          double yEnd = drawBounds.getY() + (double) j * pixelsBetweenTicks;
+        double xStart = drawBounds.getMaxX() - StyleManager.MAX_TICK_LENGTH;
+        double yStart = drawBounds.getY() + (double) j * pixelsBetweenTicks;
 
-          Line2D line = new Line2D.Double(xStart, yStart, xEnd, yEnd);
-          graphics.draw(line);
-        }
+        double xEnd = drawBounds.getMaxX();
+        double yEnd = drawBounds.getY() + (double) j * pixelsBetweenTicks;
 
+        Line2D line = new Line2D.Double(xStart, yStart, xEnd, yEnd);
+        graphics.draw(line);
       }
     }
   }
@@ -136,7 +142,7 @@ public class FacetedChart<G, X, Y> {
           getFacadeHeight());
     }
 
-    private double getFacadeHeight() {
+    double getFacadeHeight() {
       return (image.getHeight()
           - StyleManager.TOP_MARGIN - StyleManager.BOTTOM_MARGIN
           - StyleManager.MARGIN_BETWEEN_FACADES * (double) (data.getGroups().size() - 1)
@@ -144,21 +150,31 @@ public class FacetedChart<G, X, Y> {
           / (double) data.getGroups().size();
     }
 
-    private double getFacadeWidth() {
+    double getFacadeWidth() {
       return image.getWidth()
           - StyleManager.LEFT_MARGIN
           - StyleManager.RIGHT_MARGIN
           - yAxis.getWidth();
     }
 
-    private double getFacadeX() {
+    double getFacadeX() {
       return StyleManager.LEFT_MARGIN + yAxis.getWidth();
     }
 
-    private double getFacadeY() {
+    double getFacadeY() {
       return StyleManager.TOP_MARGIN
           + StyleManager.MARGIN_BETWEEN_FACADES * currentFacadeNumber
           + getFacadeHeight() * currentFacadeNumber;
+    }
+
+    Rectangle2D calculateDrawBoundsForAxis() {
+      double x = StyleManager.LEFT_MARGIN;
+      double y = getFacadeY();
+      double width = yAxis.getWidth();
+      double height = getFacadeHeight();
+
+      Rectangle2D drawBounds = new Rectangle2D.Double(x, y, width, height);
+      return drawBounds;
     }
   }
 
