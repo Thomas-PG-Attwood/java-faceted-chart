@@ -26,20 +26,4 @@ public class PointConverter<X, Y> {
   public Point2D getPoint(X xValue, Y yValue) {
     return new Point2D.Double(convertX(xValue), convertY(yValue));
   }
-  
-  public <G> List<Point2D> convertDataGroup(FacetedChartData<?, X, Y, G> data, G group) {
-    List<Point2D> points = new ArrayList<Point2D>();
-
-    int numPoints = data.size(group);
-
-    List<X> xValues = data.getXValues(group);
-    List<Y> yValues = data.getYValues(group);
-
-    for (int j = 0; j < numPoints; j++) {
-      points.add(new Point2D.Double(
-          this.convertX(xValues.get(j)),
-          this.convertY(yValues.get(j))));
-    }
-    return points;
-  }
 }

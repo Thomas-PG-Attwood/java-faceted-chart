@@ -1,11 +1,16 @@
 package uk.co.ticklethepanda.charting.faceted;
 
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
+import java.awt.geom.Rectangle2D.Double;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+
+import uk.co.ticklethepanda.charting.faceted.internal.PointConverter;
 
 /**
  * Contains the data required for plotting a graph.
@@ -200,5 +205,36 @@ public class FacetedChartData<T, X, Y, G> {
       values.add(aspect.apply(item));
     }
     return values;
+  }
+
+  public List<Point2D> convertGroupToPoints(PointConverter<X, Y> converter, G group) {
+    List<Point2D> points = new ArrayList<Point2D>();
+
+    int numPoints = this.size(group);
+
+    List<X> xValues = this.getXValues(group);
+    List<Y> yValues = this.getYValues(group);
+
+    for (int j = 0; j < numPoints; j++) {
+      points.add(new Point2D.Double(
+          converter.convertX(xValues.get(j)),
+          converter.convertY(yValues.get(j))));
+    }
+    return points;
+  }
+
+  Rectangle2D getDataBounds(PointConverter<X, Y> converter) {
+
+    double xMin = converter.convertX(this.getMinX());
+    double xMax = converter.convertX(this.getMaxX());
+
+    double yMin = converter.convertY(this.getMinY());
+    double yMax = converter.convertY(this.getMaxY());
+
+    double width = xMax - xMin;
+
+    double height = yMax - yMin;
+
+    return new Double(xMin, yMin, width, height);
   }
 }
