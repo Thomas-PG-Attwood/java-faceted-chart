@@ -1,4 +1,4 @@
-# java-faceted-chart
+# java-faceted-chart [![Build](https://travis-ci.org/TickleThePanda/java-faceted-chart.svg?branch=master)](https://travis-ci.org/TickleThePanda/java-faceted-chart)
 A faceted chart generator for Java.
 
 Inspired by [ggplot2](http://ggplot2.org/)'s faceted charts.
