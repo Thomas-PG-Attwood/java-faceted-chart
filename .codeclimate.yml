@@ -2,6 +2,7 @@ engines:
   pmd:
     enabled: true
     channel: "beta"
+    config: "config/pmd/pmd.xml"
   fixme:
     enabled: true
 
