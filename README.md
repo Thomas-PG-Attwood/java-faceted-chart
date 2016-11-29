@@ -1,4 +1,4 @@
-# java-faceted-chart [![Build](https://travis-ci.org/TickleThePanda/java-faceted-chart.svg?branch=master)](https://travis-ci.org/TickleThePanda/java-faceted-chart) [![Coverage Status](https://coveralls.io/repos/github/TickleThePanda/java-faceted-chart/badge.svg?branch=master)](https://coveralls.io/github/TickleThePanda/java-faceted-chart?branch=master)
+# java-faceted-chart [![Build](https://travis-ci.org/TickleThePanda/java-faceted-chart.svg?branch=master)](https://travis-ci.org/TickleThePanda/java-faceted-chart) [![Coverage Status](https://coveralls.io/repos/github/TickleThePanda/java-faceted-chart/badge.svg?branch=master)](https://coveralls.io/github/TickleThePanda/java-faceted-chart?branch=master) [![Code Climate](https://codeclimate.com/github/TickleThePanda/java-faceted-chart/badges/gpa.svg)](https://codeclimate.com/github/TickleThePanda/java-faceted-chart)
 
 A faceted chart generator for Java.
 
